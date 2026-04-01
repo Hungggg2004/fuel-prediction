@@ -1,39 +1,82 @@
 from flask import Flask, render_template, request
 import pickle
-import numpy as np
+import pandas as pd
 import os
 
 app = Flask(__name__)
 
 # ================== LOAD MODEL ==================
-model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
-model = pickle.load(open(model_path, "rb"))
+base_path = os.path.dirname(__file__)
+
+model = pickle.load(open(os.path.join(base_path, "model.pkl"), "rb"))
+columns = pickle.load(open(os.path.join(base_path, "columns.pkl"), "rb"))
 
 # ================== HOME ==================
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return render_template("index.html")
+    result = None
+    suggestion = ""
 
-# ================== PREDICT ==================
-@app.route("/predict", methods=["POST"])
-def predict():
-    try:
-        # Lấy dữ liệu từ form
-        cc = float(request.form["cc"])
-        power = float(request.form["power"])
+    if request.method == "POST":
+        try:
+            # ===== Lấy dữ liệu từ form =====
+            cc = float(request.form["cc"])
+            power = float(request.form["power"])
+            speed = float(request.form["speed"])
+            load_weight = float(request.form["load_weight"])
+            road_type = request.form["road_type"]
+            weather = request.form["weather"]
 
-        # Convert thành array
-        features = np.array([[cc, power]])
+            # ===== Feature Engineering =====
+            power_per_cc = power / cc
+            price = 30000000   # giả lập
+            price_per_cc = price / cc
+            rating = 4.5
+            mileage = 50
 
-        # Dự đoán
-        prediction = model.predict(features)[0]
+            data = {
+                'cc': cc,
+                'power(PS)': power,
+                'price': price,
+                'rating': rating,
+                'mileage': mileage,
+                'speed': speed,
+                'load_weight': load_weight,
+                'power_per_cc': power_per_cc,
+                'price_per_cc': price_per_cc,
+            }
 
-        result = f"{prediction:.2f} L/100km"
+            df = pd.DataFrame([data])
 
-        return render_template("index.html", prediction_text=f"Fuel Consumption: {result}")
+            # ===== One-hot giống lúc train =====
+            for col in columns:
+                if col not in df.columns:
+                    df[col] = 0
 
-    except:
-        return render_template("index.html", prediction_text="⚠️ Vui lòng nhập đúng dữ liệu!")
+            df = df[columns]
+
+            # ===== Predict =====
+            pred = model.predict(df)[0]
+            result = round(pred, 2)
+
+            # ===== Gợi ý AI =====
+            if speed > 60:
+                suggestion += "⚡ Giảm tốc độ để tiết kiệm xăng. "
+
+            if load_weight > 100:
+                suggestion += "⚖️ Hạn chế chở quá nặng. "
+
+            if road_type == "mountain":
+                suggestion += "⛰️ Đường đèo tiêu hao nhiều nhiên liệu. "
+
+            if weather == "rainy":
+                suggestion += "🌧️ Trời mưa làm tăng tiêu hao nhiên liệu. "
+
+        except:
+            result = "⚠️ Lỗi dữ liệu!"
+            suggestion = ""
+
+    return render_template("index.html", result=result, suggestion=suggestion)
 
 # ================== RUN ==================
 if __name__ == "__main__":
