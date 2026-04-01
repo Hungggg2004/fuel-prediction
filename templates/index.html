@@ -11,66 +11,47 @@ body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #667eea, #764ba2);
     margin: 0;
-    min-height: 100vh;
 }
 
-/* LAYOUT 3 CỘT */
 .main {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
     gap: 20px;
     padding: 40px;
 }
 
-/* CARD CHUNG */
 .card {
     background: white;
     padding: 25px;
     border-radius: 20px;
     width: 300px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    animation: fadeIn 0.8s ease;
 }
 
 .center {
     width: 420px;
 }
 
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(30px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-h2, h3 {
-    margin-bottom: 15px;
-}
-
-/* FORM */
 input, select {
     width: 100%;
     padding: 12px;
     margin-top: 10px;
     border-radius: 10px;
-    border: 1px solid #ccc;
 }
 
 button {
     margin-top: 15px;
-    width: 100%;
     padding: 12px;
-    background: linear-gradient(135deg, #667eea, #5a67d8);
+    width: 100%;
+    background: #667eea;
     color: white;
     border: none;
     border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
 }
 
-/* RESULT */
 .result {
     margin-top: 15px;
-    padding: 12px;
+    padding: 10px;
     background: #eef2ff;
     border-radius: 10px;
 }
@@ -82,28 +63,19 @@ button {
     border-radius: 10px;
 }
 
-/* FUEL */
 .fuel-box {
     background: #e6fffa;
     padding: 10px;
     margin-top: 10px;
     border-radius: 10px;
-    font-weight: bold;
 }
 
-/* HISTORY */
 .history-item {
     background: #f1f5f9;
-    padding: 10px;
+    padding: 12px;
     margin-top: 10px;
     border-radius: 10px;
     font-size: 13px;
-}
-
-footer {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #888;
 }
 </style>
 </head>
@@ -112,71 +84,58 @@ footer {
 
 <div class="main">
 
-    <!-- LEFT: GIÁ XĂNG -->
-    <div class="card">
-        <h3>⛽ Giá xăng hôm nay</h3>
+<!-- LEFT -->
+<div class="card">
+    <h3>⛽ Giá xăng</h3>
+    <div class="fuel-box">RON95: {{ fuel.ron95 }} đ/L</div>
+    <div class="fuel-box">E5: {{ fuel.e5 }} đ/L</div>
+    <div class="fuel-box">Diesel: {{ fuel.diesel }} đ/L</div>
+</div>
 
-        <div class="fuel-box">RON95: {{ fuel.ron95 }} đ/L</div>
-        <div class="fuel-box">E5: {{ fuel.e5 }} đ/L</div>
-        <div class="fuel-box">Diesel: {{ fuel.diesel }} đ/L</div>
+<!-- CENTER -->
+<div class="card center">
+    <h2>🏍️ Fuel Prediction AI</h2>
 
-        <footer>Cập nhật từ VnExpress</footer>
+    <form method="POST">
+        <input type="number" name="cc" placeholder="Dung tích" required>
+        <input type="number" name="power" placeholder="Công suất" required>
+        <input type="number" name="speed" placeholder="Tốc độ" required>
+        <input type="number" name="load_weight" placeholder="Tải trọng" required>
+
+        <select name="road_type" required>
+            <option value="city">Thành phố</option>
+            <option value="highway">Cao tốc</option>
+            <option value="mountain">Đèo núi</option>
+        </select>
+
+        <select name="weather" required>
+            <option value="normal">Bình thường</option>
+            <option value="rainy">Mưa</option>
+        </select>
+
+        <button type="submit">🚀 Dự đoán</button>
+    </form>
+
+    {% if result %}
+    <div class="result">🔥 {{ result }} L/100km</div>
+    <div class="suggestion">💡 {{ suggestion }}</div>
+    {% endif %}
+</div>
+
+<!-- RIGHT -->
+<div class="card">
+    <h3>📜 Lịch sử</h3>
+
+    {% for item in history %}
+    <div class="history-item">
+        ⏰ {{ item.time }}<br>
+        🏍️ {{ item.cc }} CC | ⚡ {{ item.power }} PS<br>
+        🚗 {{ item.speed }} km/h | 📦 {{ item.load_weight }} kg<br>
+        🛣️ {{ item.road_type }} | 🌦️ {{ item.weather }}<br>
+        🔥 {{ item.result }} L/100km
     </div>
-
-    <!-- CENTER: FORM -->
-    <div class="card center">
-        <h2>🏍️ Fuel Prediction AI</h2>
-
-        <form method="POST">
-            <input type="number" step="any" name="cc" placeholder="Dung tích (CC)" required>
-            <input type="number" step="any" name="power" placeholder="Công suất (PS)" required>
-            <input type="number" step="any" name="speed" placeholder="Tốc độ (km/h)" required>
-            <input type="number" step="any" name="load_weight" placeholder="Tải trọng (kg)" required>
-
-            <select name="road_type" required>
-                <option value="">Chọn loại đường</option>
-                <option value="city">Thành phố</option>
-                <option value="highway">Cao tốc</option>
-                <option value="mountain">Đèo núi</option>
-            </select>
-
-            <select name="weather" required>
-                <option value="">Chọn thời tiết</option>
-                <option value="normal">Bình thường</option>
-                <option value="rainy">Mưa</option>
-            </select>
-
-            <button type="submit">🚀 Dự đoán</button>
-        </form>
-
-        {% if result %}
-        <div class="result">
-            🔥 Tiêu hao: {{ result }} L/100km
-        </div>
-
-        <div class="suggestion">
-            💡 {{ suggestion }}
-        </div>
-        {% endif %}
-
-        <footer>Random Forest | ML Project</footer>
-    </div>
-
-    <!-- RIGHT: LỊCH SỬ -->
-    <div class="card">
-        <h3>📜 Lịch sử dự đoán</h3>
-
-        {% for item in history %}
-        <div class="history-item">
-            CC: {{ item.cc }} | PS: {{ item.power }}<br>
-            🚀 {{ item.result }} L/100km
-        </div>
-        {% endfor %}
-
-        {% if not history %}
-        <p>Chưa có dữ liệu</p>
-        {% endif %}
-    </div>
+    {% endfor %}
+</div>
 
 </div>
 

@@ -4,6 +4,7 @@ import numpy as np
 import os
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -22,16 +23,12 @@ def get_fuel_price():
         res = requests.get(url, timeout=5)
         soup = BeautifulSoup(res.text, "html.parser")
 
-        text = soup.get_text()
-
-        # 👉 vì HTML khó parse → dùng fallback ổn định
-        fuel_data = {
+        # ⚠️ fallback (vì HTML khó parse ổn định)
+        return {
             "ron95": "24.330",
             "e5": "23.320",
             "diesel": "35.440"
         }
-
-        return fuel_data
 
     except:
         return {
@@ -45,7 +42,6 @@ def get_fuel_price():
 def home():
     result = None
     suggestion = None
-
     fuel_data = get_fuel_price()
 
     if request.method == "POST":
@@ -58,12 +54,11 @@ def home():
             weather = request.form["weather"]
 
             power_per_cc = power / cc
-            price = 30000000  # giả lập
+            price = 30000000
             price_per_cc = price / cc
             rating = 4.5
             mileage = 50
 
-            # ================== BUILD INPUT ==================
             sample = {
                 "cc": cc,
                 "power(PS)": power,
@@ -76,7 +71,6 @@ def home():
                 "price_per_cc": price_per_cc
             }
 
-            # one-hot encode
             for col in columns:
                 if col not in sample:
                     sample[col] = 0
@@ -88,11 +82,11 @@ def home():
                 sample[f"weather_{weather}"] = 1
 
             X = np.array([list(sample[c] for c in columns)])
-
             prediction = model.predict(X)[0]
+
             result = f"{prediction:.2f}"
 
-            # ================== SUGGESTION ==================
+            # ===== suggestion =====
             if weather == "rainy":
                 suggestion = "🌧️ Trời mưa làm tăng tiêu hao nhiên liệu"
             elif speed > 60:
@@ -102,14 +96,19 @@ def home():
             else:
                 suggestion = "✅ Điều kiện tốt, tiết kiệm nhiên liệu"
 
-            # ================== SAVE HISTORY ==================
+            # ===== lưu history =====
             history.append({
                 "cc": cc,
                 "power": power,
-                "result": result
+                "speed": speed,
+                "load_weight": load_weight,
+                "road_type": road_type,
+                "weather": weather,
+                "result": result,
+                "time": datetime.now().strftime("%H:%M:%S %d-%m-%Y")
             })
 
-            if len(history) > 5:
+            if len(history) > 10:
                 history.pop(0)
 
         except:
