@@ -32,11 +32,20 @@ body {
     width: 420px;
 }
 
+label {
+    font-size: 13px;
+    color: #555;
+    display: block;
+    margin-top: 10px;
+    text-align: left;
+}
+
 input, select {
     width: 100%;
     padding: 12px;
-    margin-top: 10px;
+    margin-top: 5px;
     border-radius: 10px;
+    border: 1px solid #ccc;
 }
 
 button {
@@ -47,13 +56,15 @@ button {
     color: white;
     border: none;
     border-radius: 10px;
+    font-weight: bold;
 }
 
 .result {
     margin-top: 15px;
-    padding: 10px;
+    padding: 12px;
     background: #eef2ff;
     border-radius: 10px;
+    font-size: 15px;
 }
 
 .suggestion {
@@ -61,6 +72,7 @@ button {
     padding: 10px;
     background: #e6fffa;
     border-radius: 10px;
+    font-size: 14px;
 }
 
 .fuel-box {
@@ -68,6 +80,7 @@ button {
     padding: 10px;
     margin-top: 10px;
     border-radius: 10px;
+    font-weight: bold;
 }
 
 .history-item {
@@ -76,6 +89,7 @@ button {
     margin-top: 10px;
     border-radius: 10px;
     font-size: 13px;
+    line-height: 1.5;
 }
 </style>
 </head>
@@ -96,18 +110,32 @@ button {
 <div class="card center">
     <h2>🏍️ Fuel Prediction AI</h2>
 
-    <form method="POST">
-        <input type="number" name="cc" placeholder="Dung tích" required>
-        <input type="number" name="power" placeholder="Công suất" required>
-        <input type="number" name="speed" placeholder="Tốc độ" required>
-        <input type="number" name="load_weight" placeholder="Tải trọng" required>
+    <p style="font-size:13px; color:#666;">
+        Vui lòng nhập đúng đơn vị: CC, PS, km/h, kg
+    </p>
 
+    <form method="POST">
+
+        <label>Dung tích (CC)</label>
+        <input type="number" name="cc" placeholder="VD: 150" required>
+
+        <label>Công suất (PS)</label>
+        <input type="number" name="power" placeholder="VD: 12" required>
+
+        <label>Tốc độ (km/h)</label>
+        <input type="number" name="speed" placeholder="VD: 60" required>
+
+        <label>Tải trọng (kg)</label>
+        <input type="number" name="load_weight" placeholder="VD: 80" required>
+
+        <label>Loại đường</label>
         <select name="road_type" required>
             <option value="city">Thành phố</option>
             <option value="highway">Cao tốc</option>
             <option value="mountain">Đèo núi</option>
         </select>
 
+        <label>Thời tiết</label>
         <select name="weather" required>
             <option value="normal">Bình thường</option>
             <option value="rainy">Mưa</option>
@@ -117,8 +145,13 @@ button {
     </form>
 
     {% if result %}
-    <div class="result">🔥 {{ result }} L/100km</div>
-    <div class="suggestion">💡 {{ suggestion }}</div>
+    <div class="result">
+        🔥 Tiêu hao nhiên liệu: <b>{{ result }} L/100km</b>
+    </div>
+
+    <div class="suggestion">
+        💡 {{ suggestion }}
+    </div>
     {% endif %}
 </div>
 
@@ -132,9 +165,13 @@ button {
         🏍️ {{ item.cc }} CC | ⚡ {{ item.power }} PS<br>
         🚗 {{ item.speed }} km/h | 📦 {{ item.load_weight }} kg<br>
         🛣️ {{ item.road_type }} | 🌦️ {{ item.weather }}<br>
-        🔥 {{ item.result }} L/100km
+        🔥 <b>{{ item.result }} L/100km</b>
     </div>
     {% endfor %}
+
+    {% if not history %}
+    <p>Chưa có dữ liệu</p>
+    {% endif %}
 </div>
 
 </div>
